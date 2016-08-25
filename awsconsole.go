@@ -2,10 +2,12 @@ package main
 
 import (
     "fmt"
+    "os"
     "encoding/json"
     "net/http"
     "net/url"
     "io/ioutil"
+    "flag"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/sts"
@@ -20,20 +22,62 @@ const (
     console = "https://console.aws.amazon.com/"
 )
 
+func ParseArgs() (bool, string) {
+    verbose := flag.Bool("v", false, "print URL instead of opening browser")
+    flag.Parse()
+    profile := ""
+    if len(flag.Args()) > 0 {
+        profile = flag.Arg(0)
+    }
+
+    return *verbose, profile
+}
+
+func GetSession(profile string) *session.Session {
+    var userSession *session.Session
+    if profile == "" {
+        userSession = session.New()
+    } else {
+        os.Unsetenv("AWS_ACCESS_KEY_ID")
+        os.Unsetenv("AWS_SECRET_ACCESS_KEY")
+        os.Unsetenv("AWS_SESSION_TOKEN")
+        os.Unsetenv("AWS_DEFAULT_REGION")
+        os.Unsetenv("AWS_DEFAULT_PROFILE")
+
+        os.Setenv("AWS_PROFILE", profile)
+
+        userSession = session.New()
+    }
+    return userSession
+}
+
+
 func main() {
-    userSession := session.New()
+    verbose, profile := ParseArgs()
+
+    userSession := GetSession(profile)
     stsSvc := sts.New(userSession)
 
     iamSvc := iam.New(userSession)
-    user, _ := iamSvc.GetUser(nil)
+    user, err := iamSvc.GetUser(nil)
 
-    tokenOutput, _ := stsSvc.GetFederationToken(&sts.GetFederationTokenInput{
+    if err != nil {
+        fmt.Println("Could not get user information")
+        os.Exit(1)
+    }
+
+    tokenOutput, err := stsSvc.GetFederationToken(&sts.GetFederationTokenInput{
         Name: aws.String(fmt.Sprintf("%s-awsconsole", *user.User.UserName)),
         DurationSeconds: aws.Int64(duration),
         Policy: aws.String(policy),
     })
 
-    jsonSignin, _ := json.Marshal(struct {
+    if err != nil {
+        fmt.Println("Could not connect to STS Service")
+        os.Exit(2)
+    }
+
+    jsonSignin, err := json.Marshal(struct {
         SessionID string `json:"sessionId"`
         SessionKey string `json:"sessionKey"`
         SessionToken string `json:"sessionToken"`
@@ -43,20 +87,41 @@ func main() {
         SessionToken: *tokenOutput.Credentials.SessionToken,
     })
 
+    if err != nil {
+        fmt.Println("Could not generate token input")
+        os.Exit(3)
+    }
 
-    response, _ := http.Get(awsfed + "?Action=getSigninToken&Session=" +
+    response, err := http.Get(awsfed + "?Action=getSigninToken&Session=" +
         url.QueryEscape(string(jsonSignin)))
-    responseBody, _ := ioutil.ReadAll(response.Body)
+    if err != nil {
+        fmt.Println("Could not get service response")
+        os.Exit(4)
+    }
+
+    responseBody, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        fmt.Println("Could not read service response")
+        os.Exit(5)
+    }
     response.Body.Close()
 
     var data map[string]interface{}
-    json.Unmarshal(responseBody, &data)
+    err = json.Unmarshal(responseBody, &data)
+    if err != nil {
+        fmt.Println("Could not parse json")
+        os.Exit(6)
+    }
 
     url := (awsfed + "?Action=login&Destination=" +
         url.QueryEscape(console) + "&SigninToken=" +
         data["SigninToken"].(string))
 
-    browser.OpenURL(url)
+    if verbose == true {
+        fmt.Println(url)
+    } else {
+        browser.OpenURL(url)
+    }
 }
 
 
