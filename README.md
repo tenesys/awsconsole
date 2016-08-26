@@ -6,7 +6,7 @@
 ### Using go tools
 `$ go get -u github.com/tenesys/awsconsole`
 ### Using binary package
-Just download tarball from *Downloads* section and copy it to `/usr/bin/`.
+Just download tarball from [gobuilder.me](https://gobuilder.me/github.com/tenesys/awsconsole)
 
 ## Usage
 `$ awsconsole [-v] [profile-name]`
