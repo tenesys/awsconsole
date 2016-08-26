@@ -34,28 +34,25 @@ func ParseArgs() (bool, string) {
 }
 
 func GetSession(profile string) *session.Session {
-    var userSession *session.Session
     if profile == "" {
-        userSession = session.New()
-    } else {
-        os.Unsetenv("AWS_ACCESS_KEY_ID")
-        os.Unsetenv("AWS_SECRET_ACCESS_KEY")
-        os.Unsetenv("AWS_SESSION_TOKEN")
-        os.Unsetenv("AWS_DEFAULT_REGION")
-        os.Unsetenv("AWS_DEFAULT_PROFILE")
-
-        os.Setenv("AWS_PROFILE", profile)
-
-        userSession = session.New()
+        profile = os.Getenv("AWS_PROFILE")
+    }
+    userSession, err := session.NewSessionWithOptions(session.Options{
+        Profile: profile,
+        SharedConfigState: session.SharedConfigEnable,
+    })
+    if err != nil {
+        fmt.Println("Could not get profile", profile)
+        os.Exit(7)
     }
     return userSession
 }
-
 
 func main() {
     verbose, profile := ParseArgs()
 
     userSession := GetSession(profile)
+    fmt.Println(*userSession.Config.Region)
     stsSvc := sts.New(userSession)
 
     iamSvc := iam.New(userSession)
