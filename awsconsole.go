@@ -19,7 +19,7 @@ const (
     policy = `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": ["*"], "Resource": ["*"]}]}`
     duration = int64(3600)
     awsfed = "https://signin.aws.amazon.com/federation"
-    console = "https://console.aws.amazon.com/"
+    console = "https://console.aws.amazon.com/console/home?region="
 )
 
 func ParseArgs() (bool, string) {
@@ -52,7 +52,7 @@ func main() {
     verbose, profile := ParseArgs()
 
     userSession := GetSession(profile)
-    fmt.Println(*userSession.Config.Region)
+    region := *userSession.Config.Region
     stsSvc := sts.New(userSession)
 
     iamSvc := iam.New(userSession)
@@ -111,7 +111,7 @@ func main() {
     }
 
     url := (awsfed + "?Action=login&Destination=" +
-        url.QueryEscape(console) + "&SigninToken=" +
+        url.QueryEscape(console + region) + "&SigninToken=" +
         data["SigninToken"].(string))
 
     if verbose == true {
