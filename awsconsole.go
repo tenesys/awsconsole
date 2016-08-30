@@ -48,6 +48,11 @@ func GetSession(profile string) *session.Session {
     return userSession
 }
 
+func PrepareBrowser() {
+    browser.Stderr = ioutil.Discard
+    browser.Stdout = ioutil.Discard
+}
+
 func main() {
     verbose, profile := ParseArgs()
 
@@ -117,6 +122,7 @@ func main() {
     if verbose == true {
         fmt.Println(url)
     } else {
+        PrepareBrowser()
         browser.OpenURL(url)
     }
 }
