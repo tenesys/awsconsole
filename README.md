@@ -13,7 +13,7 @@ Just download a tarball suitable for you architecture from [gobuilder.me](https:
 ## Usage
 `$ awsconsole [-v] [profile-name]`
 
-- -v - print URL instead of opening variable
+- -v - print URL instead of opening in browser
 - profile-name - use profile from credentials file instead of environment variables
 
 **Do not change positions of parameters, `-v` MUST BE before the profile name***
