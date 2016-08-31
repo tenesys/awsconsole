@@ -16,7 +16,7 @@ Just download a tarball suitable for you architecture from [gobuilder.me](https:
 - -v - print URL instead of opening in browser
 - profile-name - use profile from credentials file instead of environment variables
 
-**Do not change positions of parameters, `-v` MUST BE before the profile name***
+**Do not change positions of parameters, `-v` MUST BE before the profile name**
 ### Environment variables
 ```
 $ env | grep AWS_PROFILE
@@ -33,8 +33,42 @@ It will use profiles defined in `~/.aws/credentials`
 $ awsconsole -v tenesys
 ```
 
+## Required IAM permissions
+To use awsconsole, you should have permission to call some IAM and STS actions. If you are encountering `Could not get user information` or `Could not connect to STS service` errors, make sure you have required permissions to call `IAM:GetUser` and `STS:GetFederationToken`.
+
+### Policy
+You can add the policy below to your IAM users or groups.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1472645401000",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetUser"
+            ],
+            "Resource": [
+                "arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHNES:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "Stmt1472645461000",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetFederationToken"
+            ],
+            "Resource": [
+                "arn:aws:sts::ACCOUNT-ID-WITHOUT-HYPHNES:federated-user/${aws:username}-awsconsole"
+            ]
+        }
+    ]
+}
+```
+Please note that you have to replace **ACCOUNT-ID-WITHOUT-HYPHENS** with your Account Id.
+
 ## License
-GPLV3
+GPLv3
 
 ## Maintainers
 - Jakub Woźniak \<j.wozniak@tenesys.pl\>
