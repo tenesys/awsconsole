@@ -22,15 +22,20 @@ const (
     console = "https://console.aws.amazon.com/console/home?region="
 )
 
-func ParseArgs() (bool, string) {
+var (
+    version = "0.1.0"
+)
+
+func ParseArgs() (bool, bool, string) {
     verbose := flag.Bool("v", false, "print URL instead of opening browser")
+    printVersion := flag.Bool("V", false, "print version")
     flag.Parse()
     profile := ""
     if len(flag.Args()) > 0 {
         profile = flag.Arg(0)
     }
 
-    return *verbose, profile
+    return *verbose, *printVersion, profile
 }
 
 func GetSession(profile string) *session.Session {
@@ -43,6 +48,7 @@ func GetSession(profile string) *session.Session {
     })
     if err != nil {
         fmt.Println("Could not get profile", profile)
+        fmt.Println(err)
         os.Exit(7)
     }
     return userSession
@@ -54,7 +60,13 @@ func PrepareBrowser() {
 }
 
 func main() {
-    verbose, profile := ParseArgs()
+    verbose, printVersion, profile := ParseArgs()
+
+    if printVersion {
+        fmt.Printf("awsconsole v%v\n", version)
+        fmt.Println("https://github.com/tenesys/awsconsole")
+        os.Exit(0)
+    }
 
     userSession := GetSession(profile)
     region := *userSession.Config.Region
@@ -65,6 +77,7 @@ func main() {
 
     if err != nil {
         fmt.Println("Could not get user information")
+        fmt.Println(err)
         os.Exit(1)
     }
 
@@ -75,7 +88,8 @@ func main() {
     })
 
     if err != nil {
-        fmt.Println("Could not connect to STS Service")
+        fmt.Println("Could not connect to STS Service:")
+        fmt.Println(err)
         os.Exit(2)
     }
 
