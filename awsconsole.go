@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "os"
+    "time"
     "encoding/json"
     "net/http"
     "net/url"
@@ -17,7 +18,7 @@ import (
 
 const (
     policy = `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": ["*"], "Resource": ["*"]}]}`
-    duration = int64(3600)
+    defaultDuration = time.Hour
     awsfed = "https://signin.aws.amazon.com/federation"
     console = "https://console.aws.amazon.com/console/home?region="
 )
@@ -26,16 +27,29 @@ var (
     version = "0.1.0"
 )
 
-func ParseArgs() (bool, bool, string) {
+func SessionDuration() time.Duration {
+    if d := os.Getenv("AWSCONSOLE_DURATION"); d != "" {
+        envDuration, err := time.ParseDuration(d)
+        if err == nil {
+            return envDuration
+        } else {
+            fmt.Printf("Couldn't parse AWSCONSOLE_DURATION, using default duration\n")
+        }
+    }
+    return defaultDuration
+}
+
+func ParseArgs() (bool, bool, time.Duration, string) {
     verbose := flag.Bool("v", false, "print URL instead of opening browser")
     printVersion := flag.Bool("V", false, "print version")
+    duration := flag.Duration("d", SessionDuration(), "session duration")
     flag.Parse()
     profile := ""
     if len(flag.Args()) > 0 {
         profile = flag.Arg(0)
     }
 
-    return *verbose, *printVersion, profile
+    return *verbose, *printVersion, *duration, profile
 }
 
 func GetSession(profile string) *session.Session {
@@ -60,7 +74,7 @@ func PrepareBrowser() {
 }
 
 func main() {
-    verbose, printVersion, profile := ParseArgs()
+    verbose, printVersion, duration, profile := ParseArgs()
 
     if printVersion {
         fmt.Printf("awsconsole v%v\n", version)
@@ -83,7 +97,7 @@ func main() {
 
     tokenOutput, err := stsSvc.GetFederationToken(&sts.GetFederationTokenInput{
         Name: aws.String(fmt.Sprintf("%s-awsconsole", *user.User.UserName)),
-        DurationSeconds: aws.Int64(duration),
+        DurationSeconds: aws.Int64(int64(duration.Seconds())),
         Policy: aws.String(policy),
     })
 
