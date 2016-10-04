@@ -11,12 +11,14 @@
 Just download a tarball suitable for you architecture from [gobuilder.me](https://gobuilder.me/github.com/tenesys/awsconsole)
 
 ## Usage
-`$ awsconsole [-v] [profile-name]`
+`$ awsconsole [-v] [-d duration] [profile-name]`
 
 - -v - print URL instead of opening variable
+- -d - session duration (eg. 8h, 30m)
 - profile-name - use profile from credentials file instead of environment variables
 
-**Do not change positions of parameters, `-v` MUST BE before the profile name***
+
+**Do not change positions of parameters, `-v` MUST BE before the profile name**
 ### Environment variables
 ```
 $ env | grep AWS_PROFILE
@@ -32,6 +34,11 @@ It will use profiles defined in `~/.aws/credentials`
 ```
 $ awsconsole -v tenesys
 ```
+
+## Configuration
+## Session duration
+You can change your default session duration by exporting an environment variable
+`AWSCONSOLE_DURATION`. It takes the same value as `-d` flag.
 
 ## License
 GPLV3
