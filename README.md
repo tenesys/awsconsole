@@ -36,7 +36,7 @@ $ awsconsole -v tenesys
 ```
 
 ## Configuration
-## Session duration
+### Session duration
 You can change your default session duration by exporting an environment variable
 `AWSCONSOLE_DURATION`. It takes the same value as `-d` flag.
 
