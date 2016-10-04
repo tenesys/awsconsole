@@ -11,7 +11,7 @@
 Just download a tarball suitable for you architecture from [gobuilder.me](https://gobuilder.me/github.com/tenesys/awsconsole)
 
 ## Usage
-`$ awsconsole [-v] [-d duration] [profile-name]`
+`$ awsconsole [-v] [profile-name]`
 
 - -v - print URL instead of opening variable
 - -d - session duration (eg. 8h, 30m)
@@ -39,6 +39,40 @@ $ awsconsole -v tenesys
 ### Session duration
 You can change your default session duration by exporting an environment variable
 `AWSCONSOLE_DURATION`. It takes the same value as `-d` flag.
+
+## Required IAM permissions
+To use awsconsole, you should have permission to call some IAM and STS actions. If you are encountering `Could not get user information` or `Could not connect to STS service` errors, make sure you have required permissions to call `IAM:GetUser` and `STS:GetFederationToken`.
+
+### Policy
+You can add the policy below to your IAM users or groups.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1472645401000",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetUser"
+            ],
+            "Resource": [
+                "arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHNES:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "Stmt1472645461000",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetFederationToken"
+            ],
+            "Resource": [
+                "arn:aws:sts::ACCOUNT-ID-WITHOUT-HYPHNES:federated-user/${aws:username}-awsconsole"
+            ]
+        }
+    ]
+}
+```
+Please note that you have to replace **ACCOUNT-ID-WITHOUT-HYPHENS** with your Account Id.
 
 ## License
 GPLV3
