@@ -96,7 +96,7 @@ func main() {
     }
 
     tokenOutput, err := stsSvc.GetFederationToken(&sts.GetFederationTokenInput{
-        Name: aws.String(fmt.Sprintf("%s-awsconsole", *user.User.UserName)),
+        Name: aws.String(fmt.Sprintf("%s", *user.User.UserName)),
         DurationSeconds: aws.Int64(int64(duration.Seconds())),
         Policy: aws.String(policy),
     })
