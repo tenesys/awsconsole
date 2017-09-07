@@ -66,7 +66,7 @@ You can add the policy below to your IAM users or groups.
                 "sts:GetFederationToken"
             ],
             "Resource": [
-                "arn:aws:sts::ACCOUNT-ID-WITHOUT-HYPHNES:federated-user/${aws:username}-awsconsole"
+                "arn:aws:sts::ACCOUNT-ID-WITHOUT-HYPHNES:federated-user/${aws:username}"
             ]
         }
     ]
